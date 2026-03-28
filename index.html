@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>S-I-M私有Gemini在线对话页</title>
+    <title>S-I-M的私有AI助手</title>
+    <link rel="icon" href="./icon.ico" type="image/x-icon">
     <!-- Markdown 渲染库 marked -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="./marked.min.js"></script>
     <!-- KaTeX 数学公式渲染库 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}] });"></script>
+    <link rel="stylesheet" href="./katex.min.css">
+    <script defer src="./katex.min.js"></script>
+    <script defer src="./contrib/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}] });"></script>
     <style>
         * {
             margin: 0;
@@ -124,11 +125,24 @@
             display: flex;
             align-items: center;
             gap: 0.8rem;
+            flex-wrap: wrap;
         }
 
         .chat-header h3 {
             color: #b9e2ff;
             font-weight: 500;
+            margin-right: auto;
+        }
+
+        .model-selector {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 2rem;
+            padding: 0.4rem 0.8rem;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
         }
 
         .status-badge {
@@ -355,12 +369,18 @@
     <div id="chatPanel" class="chat-panel" style="display: none;">
         <div class="chat-header">
             <span>🤖</span>
-            <h3>S-I-M私有Gemini智能助手</h3>
+            <h3>S-I-M的私有AI助手</h3>
+            <select id="modelSelect" class="model-selector">
+                <option value="gemini">Gemini (gemini-3-flash-preview)</option>
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="gpt-5">GPT-5</option>
+                <option value="gpt-5-mini" selected>GPT-5-mini</option>
+            </select>
             <div class="status-badge" id="connStatus">● 就绪</div>
         </div>
         <div id="messagesContainer" class="messages-area">
             <div class="message assistant">
-                <div class="bubble">👋 你好！我是**S-I-M**的私有Gemini Web对话框架，我支持**上下文记忆**、**Markdown** 和 **数学公式** 渲染，你可以连续和我对话，我会记住之前的内容。</div>
+                <div class="bubble">👋 你好！我是**S-I-M**的私人AI助手，我支持**多模型切换**（Gemini / GPT-4o / GPT-5 / GPT-5-mini）我可以记住上下文，支持 Markdown 和数学公式渲染。默认使用 GPT-5-mini，试试提问吧！</div>
             </div>
         </div>
         <div class="input-area">
@@ -373,97 +393,69 @@
 
 <script>
     // ======================= 安全模块：敏感信息混淆存储 =======================
-    // 密码 "" 的 Base64 编码为 ""，拆分为两段混淆
+    // 密码 "mic" Base64: bWlj
     const _pwdPart1 = "bW";
     const _pwdPart2 = "lj";
-    const _encodedPwd = _pwdPart1 + _pwdPart2;  
+    const _encodedPwd = _pwdPart1 + _pwdPart2;
     
-    // API 密钥: ""
-    // Base64 编码: ""
-    // 拆分为两部分增加静态分析难度
-    const _apiPartA = "QUl6YVN5RDg3ZUx2OUdDV1FFTUJrQ3cybX";
-    const _apiPartB = "NROGJSdm1kSXl5TUo4";
-    const _encodedApi = _apiPartA + _apiPartB;
+    // Gemini密钥存储
+    const _geminiPart1 = "QUl6YVN5RDg3ZUx2OUdDV1FFTUJrQ3cybX";
+    const _geminiPart2 = "NROGJSdm1kSXl5TUo4";
+    const _encodedGemini = _geminiPart1 + _geminiPart2;
     
-    // 解码函数
-    function _getPwd() {
-        try {
-            return atob(_encodedPwd);
-        } catch(e) {
-            console.error("密码解码失败");
-            return "";
-        }
-    }
+    //GPT密钥存储
+    const _gptKeyPart1 = "c2stV1didWF4aDZmQzc5VHM3dkZRRHQzSmoyNHR3VzhqYkRVNFNlQ3kwcXYyV0dxWHo4";
+    // 由于密钥长度适中，不再拆分，直接存储完整 Base64 串（但为了混淆，可再拆，但保持一致性）
+    const _encodedGpt = _gptKeyPart1;
     
-    function _getApiKey() {
-        try {
-            return atob(_encodedApi);
-        } catch(e) {
-            console.error("API 解码失败");
-            return "";
-        }
-    }
+    function _getPwd() { return atob(_encodedPwd); }
+    function _getGeminiKey() { return atob(_encodedGemini); }
+    function _getGptKey() { return atob(_encodedGpt); }
     
-    // 只暴露必要接口
     const __secure = {
         password: _getPwd(),
-        apiKey: _getApiKey()
+        geminiKey: _getGeminiKey(),
+        gptKey: _getGptKey()
     };
     Object.freeze(__secure);
     
-    // 隐藏解码函数，防止控制台调用
     window._getPwd = undefined;
-    window._getApiKey = undefined;
+    window._getGeminiKey = undefined;
+    window._getGptKey = undefined;
     
-    // ======================= Gemini API 配置 =======================
-    const MODEL = "gemini-3-flash-preview";
-    const BASE = "https://gemini.s-i-m.cc.cd";   // 用户自定义域名
+    // ======================= API 配置 =======================
+    // Gemini 配置
+    const GEMINI_MODEL = "gemini-3-flash-preview";
+    const GEMINI_BASE = "https://gemini.s-i-m.cc.cd";
     
-    let cachedApiKey = null;
+    // GPT 配置 (OpenAI 兼容)
+    const GPT_BASE = "https://api.chatanywhere.tech/v1/chat/completions";
     
-    function getApiUrl() {
-        if (!cachedApiKey) cachedApiKey = __secure.apiKey;
-        return `${BASE}/v1beta/models/${MODEL}:generateContent?key=${cachedApiKey}`;
-    }
+    let cachedGeminiKey = null;
+    let cachedGptKey = null;
     
     // ======================= 上下文对话管理 =======================
-    // 存储对话历史，格式为 Gemini API 所需的 contents 数组
-    // 每个元素: { role: "user" 或 "model", parts: [{ text: "..." }] }
+    // 统一使用 OpenAI 的消息格式存储历史: { role: "user" | "assistant", content: "..." }
     let conversationHistory = [];
     
-    // 添加消息到历史
-    function addToHistory(role, text) {
-        conversationHistory.push({
-            role: role,
-            parts: [{ text: text }]
-        });
+    function addToHistory(role, content) {
+        conversationHistory.push({ role: role, content: content });
     }
     
     // ======================= Markdown 与数学公式渲染 =======================
-    // 配置 marked 选项，开启 GFM
     if (typeof marked !== 'undefined') {
         marked.setOptions({
-            gfm: true,          // 启用 GitHub 风格的 Markdown
-            breaks: true,       // 将换行符转换为 <br>
-            headerIds: false,   // 不生成标题 id
-            mangle: false,      // 不混淆邮箱地址
-            smartLists: true,
-            smartypants: false
+            gfm: true, breaks: true, headerIds: false, mangle: false, smartLists: true
         });
     }
     
-    // 渲染 Markdown 为 HTML，然后使用 KaTeX 自动渲染数学公式
     function renderMarkdownAndMath(text) {
         if (!text) return '';
         try {
-            // 先渲染 Markdown
             let html = marked.parse(text);
-            // 移除可能存在的 script 标签（安全）
             html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-            // 创建一个临时元素，用于 KaTeX 渲染
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            // 调用 KaTeX 的自动渲染函数（需要全局可用）
             if (typeof renderMathInElement === 'function') {
                 renderMathInElement(tempDiv, {
                     delimiters: [
@@ -482,10 +474,67 @@
         }
     }
     
+    // ======================= API 调用函数 =======================
+    // Gemini 调用
+    async function callGemini(userMsg) {
+        if (!cachedGeminiKey) cachedGeminiKey = __secure.geminiKey;
+        const url = `${GEMINI_BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${cachedGeminiKey}`;
+        // 将历史转换为 Gemini 格式
+        const contents = [];
+        for (const msg of conversationHistory) {
+            contents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.content }] });
+        }
+        contents.push({ role: 'user', parts: [{ text: userMsg }] });
+        const body = { contents: contents };
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            let errMsg = `HTTP ${res.status}`;
+            try { const errData = await res.json(); errMsg = errData.error?.message || errMsg; } catch(e) {}
+            throw new Error(errMsg);
+        }
+        const data = await res.json();
+        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+            return data.candidates[0].content.parts[0].text;
+        }
+        return "未获取到有效回复。";
+    }
+    
+    // GPT 调用 (支持 gpt-4o, gpt-5, gpt-5-mini)
+    async function callGPT(model, userMsg) {
+        if (!cachedGptKey) cachedGptKey = __secure.gptKey;
+        const messages = [...conversationHistory];
+        messages.push({ role: 'user', content: userMsg });
+        const body = {
+            model: model,
+            messages: messages,
+            stream: false
+        };
+        const res = await fetch(GPT_BASE, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${cachedGptKey}`
+            },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            let errMsg = `HTTP ${res.status}`;
+            try { const errData = await res.json(); errMsg = errData.error?.message || errMsg; } catch(e) {}
+            throw new Error(errMsg);
+        }
+        const data = await res.json();
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            return data.choices[0].message.content;
+        }
+        return "未获取到有效回复。";
+    }
+    
     // ======================= 聊天界面逻辑 =======================
-    // 等待 DOM 完全加载后再绑定事件
     document.addEventListener('DOMContentLoaded', function() {
-        // 获取元素
         const loginPanel = document.getElementById('loginPanel');
         const chatPanel = document.getElementById('chatPanel');
         const pwdInput = document.getElementById('passwordInput');
@@ -495,47 +544,38 @@
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
         const connStatus = document.getElementById('connStatus');
+        const modelSelect = document.getElementById('modelSelect');
         
         let isWaiting = false;
         let typingIndicator = null;
         
-        // 辅助函数：添加消息到界面，支持 Markdown + 数学公式渲染
         function addMessage(role, content, isError = false, addToHist = true) {
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${role}`;
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
-            
             if (isError) {
                 bubble.style.background = "#4a1a2c";
                 bubble.style.border = "1px solid #ef4444";
                 bubble.style.color = "#ffc9c9";
-                bubble.innerText = content; // 错误消息不渲染
+                bubble.innerText = content;
             } else {
                 if (role === 'assistant') {
-                    // 助手消息使用 Markdown + 数学公式渲染
-                    const rendered = renderMarkdownAndMath(content);
-                    bubble.innerHTML = rendered;
-                    // 为链接添加 target="_blank"
+                    bubble.innerHTML = renderMarkdownAndMath(content);
                     const links = bubble.querySelectorAll('a');
                     links.forEach(link => {
                         link.setAttribute('target', '_blank');
                         link.setAttribute('rel', 'noopener noreferrer');
                     });
                 } else {
-                    // 用户消息纯文本
                     bubble.innerText = content;
                 }
             }
-            
             msgDiv.appendChild(bubble);
             messagesContainer.appendChild(msgDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
-            // 如果是正常对话消息且不是错误，添加到历史
             if (addToHist && !isError && role !== 'system') {
-                const apiRole = (role === 'user') ? 'user' : 'model';
-                addToHistory(apiRole, content);
+                addToHistory(role, content);
             }
         }
         
@@ -560,47 +600,6 @@
             }
         }
         
-        // API 调用，带上下文
-        async function sendToGemini(userMsg) {
-            const url = getApiUrl();
-            
-            // 构建完整的 contents 数组：历史 + 当前用户消息
-            const requestContents = [...conversationHistory];
-            // 添加当前用户消息（尚未加入历史，这里临时添加用于请求）
-            requestContents.push({
-                role: "user",
-                parts: [{ text: userMsg }]
-            });
-            
-            const body = {
-                contents: requestContents
-            };
-            
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                if (!res.ok) {
-                    let errMsg = `HTTP ${res.status}`;
-                    try {
-                        const errData = await res.json();
-                        errMsg = errData.error?.message || errMsg;
-                    } catch(e) {}
-                    throw new Error(errMsg);
-                }
-                const data = await res.json();
-                if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-                    return data.candidates[0].content.parts[0].text;
-                }
-                return "未获取到有效回复。";
-            } catch (err) {
-                console.error("API错误:", err);
-                throw err;
-            }
-        }
-        
         async function handleSend() {
             if (isWaiting) {
                 addMessage("assistant", "请等待上一条回复处理完成...", true, false);
@@ -609,19 +608,27 @@
             const msg = userInput.value.trim();
             if (!msg) return;
             userInput.value = '';
-            
-            // 先添加用户消息到界面和历史
             addMessage("user", msg, false, true);
-            
             isWaiting = true;
             connStatus.innerText = "⏳ 等待服务器响应";
             sendBtn.disabled = true;
             showTyping();
             
+            const selected = modelSelect.value;
             try {
-                const reply = await sendToGemini(msg);
+                let reply = "";
+                if (selected === "gemini") {
+                    reply = await callGemini(msg);
+                } else if (selected === "gpt-4o") {
+                    reply = await callGPT("gpt-4o", msg);
+                } else if (selected === "gpt-5") {
+                    reply = await callGPT("gpt-5", msg);
+                } else if (selected === "gpt-5-mini") {
+                    reply = await callGPT("gpt-5-mini", msg);
+                } else {
+                    reply = "未知模型";
+                }
                 hideTyping();
-                // 添加助手回复到界面和历史
                 addMessage("assistant", reply, false, true);
             } catch (err) {
                 hideTyping();
@@ -634,17 +641,17 @@
             }
         }
         
-        // 解锁验证
         function verifyAndUnlock() {
             const entered = pwdInput.value;
             if (entered === __secure.password) {
                 loginError.innerText = "";
                 loginPanel.style.display = "none";
                 chatPanel.style.display = "flex";
-                // 初始化 API Key
-                cachedApiKey = __secure.apiKey;
-                if (!cachedApiKey || cachedApiKey.length < 10) {
-                    addMessage("assistant", "⚠️ API密钥无效，请检查配置。", true, false);
+                // 预加载密钥
+                cachedGeminiKey = __secure.geminiKey;
+                cachedGptKey = __secure.gptKey;
+                if (!cachedGeminiKey || !cachedGptKey) {
+                    addMessage("assistant", "⚠️ 密钥加载失败，请检查配置。", true, false);
                     connStatus.innerText = "⚠️ 密钥错误";
                 } else {
                     connStatus.innerText = "● 准备就绪";
@@ -657,7 +664,6 @@
             }
         }
         
-        // 绑定事件
         unlockBtn.addEventListener('click', verifyAndUnlock);
         pwdInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') verifyAndUnlock();
@@ -669,20 +675,14 @@
             }
         });
         
-        // 初始渲染已有的欢迎消息（Markdown + 数学公式）
+        // 渲染欢迎消息
         const welcomeBubble = document.querySelector('#messagesContainer .message.assistant .bubble');
         if (welcomeBubble) {
             const originalText = welcomeBubble.innerText;
-            const rendered = renderMarkdownAndMath(originalText);
-            welcomeBubble.innerHTML = rendered;
-            const links = welcomeBubble.querySelectorAll('a');
-            links.forEach(link => {
-                link.setAttribute('target', '_blank');
-                link.setAttribute('rel', 'noopener noreferrer');
-            });
+            welcomeBubble.innerHTML = renderMarkdownAndMath(originalText);
         }
         
-        console.log("%c🔐 安全环境已启动 | 密码和API密钥均已混淆 | 支持上下文对话 | Markdown + 数学公式渲染已启用", "color: #3b82f6");
+        console.log("%c🔐 安全环境已启动 | 支持 Gemini / GPT-4o / GPT-5 / GPT-5-mini | 密钥已混淆 | 默认 GPT-5-mini", "color: #3b82f6");
     });
 </script>
 </body>
