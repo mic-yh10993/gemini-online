@@ -374,13 +374,13 @@
                 <option value="gemini">Gemini (gemini-3-flash-preview)</option>
                 <option value="gpt-4o">GPT-4o</option>
                 <option value="gpt-5">GPT-5</option>
-                <option value="gpt-5-mini" selected>GPT-5-mini</option>
+                <option value="gpt-5.4-mini-ca" selected>gpt-5.4-mini-ca</option>
             </select>
-            <div class="status-badge" id="connStatus">● 就绪</div>
+            <div class="status-badge" id="connStatus">● 准备就绪</div>
         </div>
         <div id="messagesContainer" class="messages-area">
             <div class="message assistant">
-                <div class="bubble">👋 你好！我是**S-I-M**的私人AI助手，我支持**多模型切换**（Gemini / GPT-4o / GPT-5 / GPT-5-mini）我可以记住上下文，支持 Markdown 和数学公式渲染。默认使用 GPT-5-mini，试试提问吧！</div>
+                <div class="bubble">👋 你好！我是**S-I-M**的私人AI助手，我支持**多模型切换**（Gemini / GPT-4o / GPT-5 / gpt-5.4-mini-ca）我可以记住上下文，支持 Markdown 和数学公式渲染。默认使用 gpt-5.4-mini-ca，试试提问吧！</div>
             </div>
         </div>
         <div class="input-area">
@@ -503,7 +503,7 @@
         return "未获取到有效回复。";
     }
     
-    // GPT 调用 (支持 gpt-4o, gpt-5, gpt-5-mini)
+    // GPT 调用 (支持 gpt-4o, gpt-5, gpt-5.4-mini-ca)
     async function callGPT(model, userMsg) {
         if (!cachedGptKey) cachedGptKey = __secure.gptKey;
         const messages = [...conversationHistory];
@@ -623,8 +623,8 @@
                     reply = await callGPT("gpt-4o", msg);
                 } else if (selected === "gpt-5") {
                     reply = await callGPT("gpt-5", msg);
-                } else if (selected === "gpt-5-mini") {
-                    reply = await callGPT("gpt-5-mini", msg);
+                } else if (selected === "gpt-5.4-mini-ca") {
+                    reply = await callGPT("gpt-5.4-mini-ca", msg);
                 } else {
                     reply = "未知模型";
                 }
@@ -635,7 +635,7 @@
                 addMessage("assistant", `⚠️ 调用失败: ${err.message}`, true, false);
             } finally {
                 isWaiting = false;
-                connStatus.innerText = "● 就绪";
+                connStatus.innerText = "● 准备就绪";
                 sendBtn.disabled = false;
                 userInput.focus();
             }
@@ -682,7 +682,7 @@
             welcomeBubble.innerHTML = renderMarkdownAndMath(originalText);
         }
         
-        console.log("%c🔐 安全环境已启动 | 支持 Gemini / GPT-4o / GPT-5 / GPT-5-mini | 密钥已混淆 | 默认 GPT-5-mini", "color: #3b82f6");
+        console.log("%c🔐 安全环境已启动 | 支持 Gemini / GPT-4o / GPT-5 / gpt-5.4-mini-ca | 密钥已混淆 | 默认 gpt-5.4-mini-ca", "color: #3b82f6");
     });
 </script>
 </body>
